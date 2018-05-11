@@ -7,17 +7,33 @@ class Game
   # compare hands method
 end
 
-class Deck
-  # generate 52 card deck method
-  # list of all cards object
-  # pick random card 
-  # deal card to player method
-  # remove card from deck method
+class Card
+  def initialize
+    @suit = suit
+    @rank = rank
+  end
 end
 
-class Cards
-  # suit property
-  # rank property
+class Deck
+  attr_accessor :cards
+  def initialize
+    @ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+    @suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
+    @cards = []
+    
+    @suits.map do |suit| 
+      @ranks.map do |rank|
+        card_array = []
+        card_array << suit 
+        card_array << rank
+        @cards << card_array
+      end
+    end
+  end
+  
+  def pick_random_card
+    @cards.delete(@cards.sample)  
+  end
 end
 
 class Player
