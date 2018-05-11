@@ -5,13 +5,25 @@ class Game
     hand.push(card_one) 
     hand.push(card_two)
   end
-  def hand_values(hand)
+  def display_hand_values(hand)
     hand.map do |array|
-      array[1].to_i
+      array[1]
     end
   end
-  def calc_hand_total(hand_values)
-    hand_values.sum
+  def convert_to_number(hand_ranks)
+    sum = 0
+    hand_ranks.map do |rank|
+      if rank == "A"
+        rank = 11
+      elsif rank == "J" || rank == "Q" || rank == "K" 
+        rank = 10
+      else 
+        rank.to_i    
+      end
+    end
+  end
+  def sum_hand_values(number_hand)
+    number_hand.sum
   end
   def run
     puts "Hello and welcome to the game of blackjack! Let's begin."
@@ -26,9 +38,10 @@ class Game
     random_card_one = deck.pick_random_card
     random_card_two = deck.pick_random_card
     player_hand = self.deal_hand(hand, random_card_one, random_card_two)
-    values = self.hand_values(player_hand)
-    totals = self.calc_hand_total(values)
-    puts "You have a #{values[0]} and a #{values[1]} in your hand. Your total is #{totals}."
+    ranks = self.display_hand_values(player_hand)
+    values = self.convert_to_number(ranks)
+    total = self.sum_hand_values(values)
+    puts "You have a #{ranks[0]} and a #{ranks[1]} in your hand. Your total is #{total}."
   end
 end
 
