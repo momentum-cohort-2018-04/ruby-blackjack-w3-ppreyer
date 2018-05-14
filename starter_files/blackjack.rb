@@ -1,6 +1,7 @@
+$game_number = 0
+$wallet = 100
 class Game
-  attr_accessor :total
-  attr_accessor :turn
+  attr_accessor :total, :turn, :game_number 
   def initialize
     @total = 0
     @dealer_total = 0
@@ -62,7 +63,6 @@ class Game
       puts "The dealer stays and has #{@dealer_total}."
       compare_hands
     else
-      puts @dealer_total     
       puts "The dealer will hit."
     end
   end
@@ -70,14 +70,14 @@ class Game
     if @total > 21 && hand_ranks.include?("A")
       @total = @total - 10
       if @total > 21
-        puts "You busted! Would you like to play another round?"
+        puts "You busted!"
         @result = "win"
-      abort
+        play_new_game
       end
     elsif @total > 21
       self.check_hand_length(hand_ranks)
-      puts "You busted! Would you like to play another round?"
-      abort
+      puts "You busted!"
+      play_new_game
     end
   end
   def compare_hands
@@ -92,29 +92,53 @@ class Game
       @result = "loss"
     end
   end
-  def add_won_bet_to_wallet(result, wallet)
+  def add_won_bet_to_wallet(result)
     if result == "win" 
-      wallet = wallet + 20
-      puts "You now have $#{wallet} available to bet."
-      abort
+      $wallet = $wallet + 20
+      puts "You now have $#{$wallet} available to bet."
+      play_new_game
     elsif result == "tie" 
-      wallet = wallet + 10
-      puts "You now have $#{wallet} available to bet"
-      abort
+      $wallet = $wallet + 10
+      puts "You now have $#{$wallet} available to bet"
+      play_new_game
     elsif result == "loss"
-      puts "You now have $#{wallet} available to bet"
-      abort
+      puts "You now have $#{$wallet} available to bet"
+      play_new_game
     else 
-      puts "onwards"
     end
   end
+  def play_new_game
+      puts "Would you like to play another game? Please enter (y)es or (n)o."
+      answer = gets.chomp.downcase
+      if answer[0] == "y"
+        return reset_game
+      elsif answer[0] == "n"
+        abort
+      end
+        puts "That is not a valid answer!"
+  end
+  def reset_game
+    @total = 0
+    @dealer_total = 0
+    @turn = "player"
+    @result = ""
+    game = Game.new
+    $game_number = $game_number + 1
+    game.run
+  end
   def run
+    if $wallet <= 0
+      puts "You don't have enough money to continue gambling. Seek help!"
+    elsif $game_number == 0
     puts "Hello and welcome to the game of blackjack! Let's begin."
-    bank = Wallet.new
-    old_wallet = bank.wallet
     player = Player.new
-    new_wallet = player.make_bet(old_wallet)
-    puts "You bet $10 and now have $#{new_wallet} worth of chips."
+    $wallet = player.make_bet
+    puts "You bet $10 and now have $#{$wallet} worth of chips."
+    elsif $game_number > 0
+    player = Player.new
+    $wallet = player.make_bet
+    puts "You bet $10 and now have $#{$wallet} worth of chips."
+    end
     deck = Deck.new
     new_hand = Hand.new
     hand = new_hand.hand
@@ -154,60 +178,47 @@ class Game
           else
             @turn = "dealer"
             puts "You stay. Your total is #{@total}"
-            puts "here 1"
             dealer = Dealer.new
             another_hand = Hand.new
             d_hand = another_hand.hand
             card_one = deck.pick_random_card
             card_two = deck.pick_random_card
             dealer_hand = deal_hand(d_hand, card_one, card_two)
-            puts "dealer turn"
             d_ranks = display_hand_values(dealer_hand)
             d_values = convert_to_number(d_ranks)
             d_total = sum_hand_values(d_values)
-            puts @dealer_total
             check_dealer_hand(d_ranks)
-            add_won_bet_to_wallet(@result, new_wallet)
+            add_won_bet_to_wallet(@result)
             if @dealer_total < 17
-              puts "here here"
             deal_card(dealer_hand, deck.pick_random_card)
             d_ranks = display_hand_values(dealer_hand)
             d_values = convert_to_number(d_ranks)
             d_total = sum_hand_values(d_values)
-            puts @dealer_total
             check_dealer_hand(d_ranks)
-            add_won_bet_to_wallet(@result, new_wallet)
-            puts @dealer_total
+            add_won_bet_to_wallet(@result)
             if @dealer_total < 17
               puts "here 2"
               deal_card(dealer_hand, deck.pick_random_card)
               d_ranks = display_hand_values(dealer_hand)
               d_values = convert_to_number(d_ranks)
               d_total = sum_hand_values(d_values)
-              puts @dealer_total
               check_dealer_hand(d_ranks)
-              add_won_bet_to_wallet(@result, new_wallet)
-              puts @dealer_total
+              add_won_bet_to_wallet(@result)
               if @dealer_total < 17
-                puts "here hello"
                 deal_card(dealer_hand, deck.pick_random_card)
                 d_ranks = display_hand_values(dealer_hand)
                 d_values = convert_to_number(d_ranks)
                 d_total = sum_hand_values(d_values)
-                puts @dealer_total
                 check_dealer_hand(d_ranks)
-                add_won_bet_to_wallet(@result, new_wallet)
-                puts @dealer_total
+                add_won_bet_to_wallet(@result)
                 if @dealer_total < 17
                   puts "here 3"
                   deal_card(dealer_hand, deck.pick_random_card)
                   d_ranks = display_hand_values(dealer_hand)
                   d_values = convert_to_number(d_ranks)
                   d_total = sum_hand_values(d_values)
-                  puts @dealer_total
                   check_dealer_hand(d_ranks)
-                  add_won_bet_to_wallet(@result, new_wallet)
-                  puts @dealer_total
+                  add_won_bet_to_wallet(@result)
                 end
               end
             end
@@ -216,7 +227,6 @@ class Game
         else
           @turn = "dealer"
           puts "You stay. Your total is #{@total}"
-          puts "here 4"
           dealer = Dealer.new
           another_hand = Hand.new
           d_hand = another_hand.hand
@@ -227,42 +237,35 @@ class Game
           d_values = convert_to_number(d_ranks)
           d_total = sum_hand_values(d_values)
           check_dealer_hand(d_ranks)
-          add_won_bet_to_wallet(@result, new_wallet)
+          add_won_bet_to_wallet(@result)
           if @dealer_total < 17
-            puts "here here"
           deal_card(dealer_hand, deck.pick_random_card)
           d_ranks = display_hand_values(dealer_hand)
           d_values = convert_to_number(d_ranks)
           d_total = sum_hand_values(d_values)
           check_dealer_hand(d_ranks)
-          add_won_bet_to_wallet(@result, new_wallet)
-          puts @dealer_total
+          add_won_bet_to_wallet(@result)
           if @dealer_total < 17
-            puts "here 5"
             deal_card(dealer_hand, deck.pick_random_card)
             d_ranks = display_hand_values(dealer_hand)
             d_values = convert_to_number(d_ranks)
             d_total = sum_hand_values(d_values)
             check_dealer_hand(d_ranks)
-            add_won_bet_to_wallet(@result, new_wallet)
-            puts @dealer_total
+            add_won_bet_to_wallet(@result)
             if @dealer_total < 17
-              puts "here 6"
               deal_card(dealer_hand, deck.pick_random_card)
               d_ranks = display_hand_values(dealer_hand)
               d_values = convert_to_number(d_ranks)
               d_total = sum_hand_values(d_values)
               check_dealer_hand(d_ranks)
-              add_won_bet_to_wallet(@result, new_wallet)
-              puts @dealer_total
+              add_won_bet_to_wallet(@result)
               if @dealer_total < 17
                 deal_card(dealer_hand, deck.pick_random_card)
                 d_ranks = display_hand_values(dealer_hand)
                 d_values = convert_to_number(d_ranks)
                 d_total = sum_hand_values(d_values)
                 check_dealer_hand(d_ranks)
-                add_won_bet_to_wallet(@result, new_wallet)
-                puts @dealer_total
+                add_won_bet_to_wallet(@result)
               end
             end
           end
@@ -281,25 +284,22 @@ class Game
       d_values = convert_to_number(d_ranks)
       d_total = sum_hand_values(d_values)
       check_dealer_hand(d_ranks)
-      add_won_bet_to_wallet(@result, new_wallet)
+      add_won_bet_to_wallet(@result)
       deal_card(dealer_hand, deck.pick_random_card)
       d_ranks = display_hand_values(dealer_hand)
       d_values = convert_to_number(d_ranks)
       d_total = sum_hand_values(d_values)
       check_dealer_hand(d_ranks)
-      add_won_bet_to_wallet(@result, new_wallet)
-      puts @dealer_total
+      add_won_bet_to_wallet(@result)
       if @dealer_total < 17
         check_dealer_hand(d_ranks)
-        add_won_bet_to_wallet(@result, new_wallet)
-        puts @dealer_total
+        add_won_bet_to_wallet(@result)
         if @dealer_total < 17
           check_dealer_hand(d_ranks)
-          add_won_bet_to_wallet(@result, new_wallet)
-          puts @dealer_total
+          add_won_bet_to_wallet(@result)
           if @dealer_total < 17
             check_dealer_hand(d_ranks)
-            add_won_bet_to_wallet(@result, new_wallet)
+            add_won_bet_to_wallet(@result)
           end
         end
       end
@@ -316,15 +316,12 @@ class Card
   end
 end
 
-# card = Card.new("Heart", "Q")
-
 class Deck
   attr_accessor :cards
   def initialize
     @ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
     @suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
     @cards = []
-    # @player_hand = []
     
     @suits.map do |suit| 
       @ranks.map do |rank|
@@ -361,8 +358,8 @@ class Player
   def initialize
     @status = true
   end
-  def make_bet(wallet)
-    wallet - 10
+  def make_bet
+    $wallet - 10
   end
   def hit_or_stay
     while true
@@ -384,5 +381,5 @@ class Dealer < Player
   end
 end
 
-
-
+game = Game.new
+game.run
